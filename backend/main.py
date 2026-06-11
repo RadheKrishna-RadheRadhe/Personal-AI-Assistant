@@ -1,9 +1,9 @@
 from ingestion.pdf_loader import (
-    extract_text_from_pdf
+    extract_pages
 )
 
-from ingestion.text_chunker import (
-    chunk_text
+from ingestion.document_processor import (
+    DocumentProcessor
 )
 
 from embeddings.embedder import (
@@ -19,34 +19,40 @@ from retrieval.retriever import (
 )
 
 
-PDF_PATH = "OS_Notes_Sample.pdf"
+PDF_PATH = "Operating Systems.pdf"
 
 
-text = extract_text_from_pdf(
+# Extract pages from PDF
+pages = extract_pages(
     PDF_PATH
 )
 
 print(
-    f"Extracted Characters: {len(text)}"
+    f"Total Pages: {len(pages)}"
 )
 
 
-chunks = chunk_text(text)
+# Process pages into chunks with metadata
+processor = DocumentProcessor()
+
+chunks = processor.process_pages(
+    pages,
+    PDF_PATH
+)
 
 print(
     f"Total Chunks: {len(chunks)}"
 )
 
-
+# Generate embeddings
 embedder = EmbeddingGenerator()
 
-embeddings = (
-    embedder.generate_embeddings(
-        chunks
-    )
+embeddings = embedder.generate_embeddings(
+    chunks
 )
 
 
+# Create FAISS index
 dimension = len(
     embeddings[0]
 )
@@ -60,6 +66,7 @@ vector_store.add_embeddings(
 )
 
 
+# Create retriever
 retriever = Retriever(
     vector_store,
     chunks,
@@ -67,11 +74,15 @@ retriever = Retriever(
 )
 
 
+# Interactive query loop
 while True:
 
     query = input(
         "\nAsk Question: "
-    )
+    ).strip()
+
+    if not query:
+        continue
 
     if query.lower() == "exit":
         break
@@ -82,8 +93,31 @@ while True:
 
     print("\nRetrieved Chunks:\n")
 
-    for i, chunk in enumerate(results):
+    for i, result in enumerate(results):
 
         print(f"\nResult {i+1}")
         print("-" * 50)
-        print(chunk[:500])
+
+        print(
+            f"Source: {result['source']}"
+        )
+
+        print(
+            f"Page: {result['page']}"
+        )
+
+        print(
+            f"Chunk ID: {result['chunk_id']}"
+        )
+
+        print("\nText:\n")
+
+        print(
+            f"Score: {result['score']:.4f}"
+        )
+
+        print("\nText:\n")
+
+        print(
+            result["text"]
+        )

@@ -13,16 +13,17 @@ class Retriever:
 
     def retrieve(
         self,
-        query,
-        top_k=3
+        query: str,
+        top_k: int = 3
     ):
 
         query_embedding = (
-            self.embedder
-            .generate_embeddings([query])[0]
+            self.embedder.generate_query_embedding(
+                query
+            )
         )
 
-        _, indices = (
+        distances, indices = (
             self.vector_store.search(
                 query_embedding,
                 top_k
@@ -31,12 +32,26 @@ class Retriever:
 
         results = []
 
-        for idx in indices[0]:
+        for score, idx in zip(
+            distances[0],
+            indices[0]
+        ):
 
-            if idx < len(self.chunks):
+            if (
+                idx >= 0
+                and idx < len(self.chunks)
+            ):
+
+                chunk = self.chunks[idx]
 
                 results.append(
-                    self.chunks[idx]
+                    {
+                        "text": chunk["text"],
+                        "source": chunk["source"],
+                        "page": chunk["page"],
+                        "chunk_id": chunk["chunk_id"],
+                        "score": float(score)
+                    }
                 )
 
         return results

@@ -1,16 +1,31 @@
 import fitz
 
 
-def extract_text_from_pdf(pdf_path: str) -> str:
-    # Extract text from PDF using PyMuPDF.
-    
-    document = fitz.open(pdf_path)
+def extract_pages(
+    pdf_path
+):
 
-    text = ""
+    document = fitz.open(
+        pdf_path
+    )
 
-    for page in document:
-        text += page.get_text()
+    pages = []
+
+    for page_num in range(
+        len(document)
+    ):
+
+        page = document[
+            page_num
+        ]
+
+        pages.append(
+            {
+                "page": page_num + 1,
+                "text": page.get_text()
+            }
+        )
 
     document.close()
 
-    return text
+    return pages
