@@ -13,8 +13,7 @@ class DocumentProcessor:
 
     def process_pages(
         self,
-        pages,
-        source
+        pages
     ):
 
         chunks = []
@@ -25,6 +24,10 @@ class DocumentProcessor:
 
             page_num = (
                 page_data["page"]
+            )
+
+            source = (
+                page_data["source"]
             )
 
             page_text = (
